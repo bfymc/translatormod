@@ -2,7 +2,6 @@ package com.example.translatemod.mixin.client;
 
 import com.example.translatemod.TranslatorModClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
