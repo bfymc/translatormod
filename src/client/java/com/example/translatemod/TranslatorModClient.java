@@ -91,11 +91,6 @@ public class TranslatorModClient implements ClientModInitializer {
 									if (client.player != null && client.getNetworkHandler() != null) {
 										client.player.networkHandler.sendChatMessage(translated);
 									}
-
-									// 3. Confirm to user
-									context.getSource().sendFeedback(
-											Text.literal("Sent to chat: " + translated).formatted(Formatting.GREEN)
-									);
 								});
 
 								return 1;
