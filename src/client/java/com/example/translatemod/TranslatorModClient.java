@@ -7,7 +7,6 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -33,7 +32,6 @@ import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
 
 public class TranslatorModClient implements ClientModInitializer {
-	private static String API_KEY = "";
 	private static final String API_URL = "https://api-free.deepl.com/v2/translate";
 	private static final Pattern LITERAL_PATTERN =
 			Pattern.compile("literal\\{([^}]*)}");
@@ -49,9 +47,10 @@ public class TranslatorModClient implements ClientModInitializer {
 	public static final String MOD_ID = "translatormod";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+	public static final Config CONFIG = new Config(MOD_ID);
+
 	@Override
 	public void onInitializeClient() {
-
 		ClientReceiveMessageEvents.CHAT.register((message, signed_message, sender, params, timestamp) -> {
 			LOGGER.info("CHAT Message from {}: {} with params {}", sender, message, params);
 			onChatMessage(message.toString());
@@ -76,7 +75,7 @@ public class TranslatorModClient implements ClientModInitializer {
 								String text = getString(context, "text");
 								MinecraftClient client = MinecraftClient.getInstance();
 
-								if (API_KEY.isEmpty()) {
+								if (CONFIG.getApiKey().isEmpty()) {
 									context.getSource().sendFeedback(Text.literal("Error: API Key not set. Use /setdeeplkey <key>").formatted(Formatting.RED));
 									return 1;
 								}
@@ -102,7 +101,7 @@ public class TranslatorModClient implements ClientModInitializer {
 			dispatcher.register(ClientCommandManager.literal("setdeeplkey")
 					.then(ClientCommandManager.argument("key", greedyString())
 							.executes(context -> {
-                                API_KEY = getString(context, "key");
+                                CONFIG.setApiKey(getString(context, "key"));
 								context.getSource().sendFeedback(Text.literal("DeepL API Key set!").formatted(Formatting.GREEN));
 								return 1;
 							})
@@ -113,7 +112,7 @@ public class TranslatorModClient implements ClientModInitializer {
 
 	// Called by ClientPlayNetworkHandlerMixin
 	public static void onChatMessage(String content) {
-		if (API_KEY.isEmpty()) {
+		if (CONFIG.getApiKey().isEmpty()) {
 			LOGGER.info("TranslatorModClient: API KEY IS EMPTY");
 			return;
 		}
@@ -146,6 +145,11 @@ public class TranslatorModClient implements ClientModInitializer {
 	}
 
 	private static void translateAsync(String text, String targetLang, TranslationCallback callback) {
+		if (CONFIG.getApiKey().isEmpty()) {
+			LOGGER.error("{}: Skipping translation (cannot translate without an API key).", MOD_ID);
+			return;
+		}
+
 		CompletableFuture.runAsync(() -> {
 			try {
 				String encodedText = URLEncoder.encode(text, StandardCharsets.UTF_8);
@@ -154,7 +158,7 @@ public class TranslatorModClient implements ClientModInitializer {
 				HttpRequest request = HttpRequest.newBuilder()
 						.uri(URI.create(API_URL))
 						.header("Content-Type", "application/x-www-form-urlencoded")
-						.header("Authorization", "DeepL-Auth-Key " + API_KEY)
+						.header("Authorization", "DeepL-Auth-Key " + CONFIG.getApiKey().get())
 						.POST(HttpRequest.BodyPublishers.ofString(formBody))
 						.build();
 
@@ -177,7 +181,6 @@ public class TranslatorModClient implements ClientModInitializer {
 					MinecraftClient.getInstance().execute(() -> callback.onError(errorMsg));
 				}
 			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
 				String errorMsg = "Translation Failed: " + e.getMessage();
 				MinecraftClient.getInstance().execute(() -> callback.onError(errorMsg));
 			}
