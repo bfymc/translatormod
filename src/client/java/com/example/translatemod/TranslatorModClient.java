@@ -80,8 +80,6 @@ public class TranslatorModClient implements ClientModInitializer {
 									return 1;
 								}
 
-								context.getSource().sendFeedback(Text.literal("Translating and sending...").formatted(Formatting.GRAY));
-
 								translateAsync(text, "ZH", translated -> {
 									// 1. Add to ignore list so we don't translate our own message back
 									recentlySentMessages.add(translated);
