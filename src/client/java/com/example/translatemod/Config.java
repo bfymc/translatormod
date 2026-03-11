@@ -51,7 +51,7 @@ public class Config {
     }
 
     public Optional<String> getApiKey() {
-        if (this.inner.apiKey.equals(PLACEHOLDER)) {
+        if (this.inner.apiKey == null || this.inner.apiKey.equals(PLACEHOLDER)) {
             return Optional.empty();
         }
 
