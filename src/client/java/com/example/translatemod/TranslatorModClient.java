@@ -110,6 +110,9 @@ public class TranslatorModClient implements ClientModInitializer {
 
 	// Called by ClientPlayNetworkHandlerMixin
 	public static void onChatMessage(String content) {
+		if (!MinecraftClient.getInstance().isOnThread())
+			return;
+
 		if (CONFIG.getApiKey().isEmpty()) {
 			LOGGER.info("TranslatorModClient: API KEY IS EMPTY");
 			return;
