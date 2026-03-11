@@ -17,7 +17,7 @@ public class ExampleClientMixin {
 
 	@Inject(method = "onGameMessage", at = @At("HEAD"))
 	private void onGameMessage(GameMessageS2CPacket packet, CallbackInfo ci) {
-		LOGGER.info("Mixin (game message): {}", packet.content());
+		LOGGER.info("Mixin (game message/Thread {}): {}", Thread.currentThread().getName(), packet.content());
 		TranslatorModClient.onChatMessage(packet.content().toString());
 	}
 }

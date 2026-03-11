@@ -52,7 +52,7 @@ public class TranslatorModClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		ClientReceiveMessageEvents.CHAT.register((message, signed_message, sender, params, timestamp) -> {
-			LOGGER.info("CHAT Message from {}: {} with params {}", sender, message, params);
+			LOGGER.info("CHAT Message from {}: {} with params {} on Thread {}", sender, message, params, Thread.currentThread().getName());
 			onChatMessage(message.toString());
 		});
 
